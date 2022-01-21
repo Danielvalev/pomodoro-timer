@@ -26,7 +26,7 @@ class PomodoroTimer:
         self.pomodoro_timer_label = ttk.Label(self.tab1, text='25:00', font=('Ubuntu', 48))
         self.pomodoro_timer_label.pack(pady=20)
 
-        self.short_brake_timer_label = ttk.Label(self.tab2, text='5:00', font=('Ubuntu', 48))
+        self.short_brake_timer_label = ttk.Label(self.tab2, text='05:00', font=('Ubuntu', 48))
         self.short_brake_timer_label.pack(pady=20)
 
         self.long_brake_timer_label = ttk.Label(self.tab3, text='15:00', font=('Ubuntu', 48))
@@ -52,16 +52,73 @@ class PomodoroTimer:
         self.pomodoro_counter_label = ttk.Label(self.grid_layout, text='Pomordoros: 0', font=('Ubuntu', 16))
         self.pomodoro_counter_label.grid(row=1, column=0, columnspan=3, pady=10)
 
+        self.pomodoros = 0
+        self.skipped = False
+        self.stopped = False
+
         self.root.mainloop()
 
     def start_timer_thread(self):
-        pass
+        t = threading.Thread(target=self.start_timer)
+        t.start()
 
     def start_timer(self):
-        pass
+        self.stopped = False
+        self.skipped = False
+        timer_id = self.tabs.index(self.tabs.select()) + 1
+
+        if timer_id == 1:
+            full_seconds = 60 * 25
+            while full_seconds > 0 and not self.stopped:
+                minutes, seconds = divmod(full_seconds, 60)
+                self.pomodoro_timer_label.config(text=f'{minutes:02d}:{seconds:02d}')
+                self.root.update()
+                time.sleep(1)
+                full_seconds -= 1
+            if not self.stopped or self.skipped:
+                self.pomodoros += 1
+                self.pomodoro_counter_label.config(text=f'Pomodoros: {self.pomodoros}')
+
+                if self.pomodoros % 4 == 0:
+                    self.tabs.select(2)
+
+                else:
+                    self.tabs.select(1)
+
+                self.start_timer()
+        elif timer_id == 2:
+            full_seconds = 60 * 5
+            while full_seconds > 0 and not self.stopped:
+                minutes, seconds = divmod(full_seconds, 60)
+                self.short_brake_timer_label.config(text=f'{minutes:02d}:{seconds:02d}')
+                self.root.update()
+                time.sleep(1)
+                full_seconds -= 1
+            if not self.stopped or self.skipped:
+                self.tabs.select(0)
+                self.start_timer()
+        elif timer_id == 3:
+            full_seconds = 60 * 15
+            while full_seconds > 0 and not self.stopped:
+                minutes, seconds = divmod(full_seconds, 60)
+                self.long_brake_timer_label.config(text=f'{minutes:02d}:{seconds:02d}')
+                self.root.update()
+                time.sleep(1)
+                full_seconds -= 1
+            if not self.stopped or self.skipped:
+                self.tabs.select(0)
+                self.start_timer()
+        else:
+            print('Invalid timer id')
 
     def reset_clock(self):
-        pass
+        self.stopped = True
+        self.skipped = False
+        self.pomodoros = 0
+        self.pomodoro_timer_label.config(text='25:00')
+        self.short_brake_timer_label.config(text='05:00')
+        self.long_brake_timer_label.config(text='15:00')
+        self.pomodoro_counter_label.config(text='Pomodoros: 0')
 
     def skip_clock(self):
         pass
